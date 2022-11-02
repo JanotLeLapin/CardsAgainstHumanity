@@ -30,6 +30,8 @@ defmodule Server do
       "cards" => ["Foo", "Bar"],
       "tsar" => false,
       "score" => 0,
+      # Only admin if he is the first player in the room
+      "admin" => Enum.empty?((Registry.Server |> Registry.lookup(req["path"])))
     }}
   end
 
@@ -45,7 +47,7 @@ defmodule Server do
     payload = JSON.decode!(json)
 
     case payload["op"] do
-      0 -> # Auth
+      0 ->
         if !state["name"] do
           name = payload["name"]
           broadcast(state["room"], :new_player, %{"name" => name, "pid" => self()})
