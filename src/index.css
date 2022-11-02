@@ -1,3 +1,44 @@
+@tailwind base;
+@tailwind utilities;
+@tailwind components;
+
+@layer base {
+  body {
+    @apply bg-gray-900 text-gray-200;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-bold;
+  }
+
+  h1 {
+    @apply text-6xl;
+  }
+
+  h2 {
+    @apply text-3xl;
+  }
+
+  h3 {
+    @apply text-2xl;
+  }
+
+  h4 {
+    @apply text-lg;
+  }
+
+  button {
+    @apply font-semibold rounded-full border-2 border-blue-500 px-4 py-1 transition-colors;
+  }
+
+  button:hover {
+    @apply bg-blue-500;
+  }
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -8,6 +49,5 @@ body {
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
