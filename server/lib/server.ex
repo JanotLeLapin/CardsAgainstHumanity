@@ -43,6 +43,7 @@ defmodule Server do
   # Message from client
   # Server bound OP codes:
   # - 0 => identification packet
+  # - 2 => start game request
   def websocket_handle({:text, json}, state) do
     payload = JSON.decode!(json)
 
@@ -56,6 +57,12 @@ defmodule Server do
         else
           {:ok, state}
         end
+      2 ->
+        if state["admin"] do
+          prompt(state["room"], "What is your favorite color?")
+        end
+
+        {:ok, state}
     end
   end
 
@@ -63,17 +70,29 @@ defmodule Server do
   # Client bound OP codes:
   # - 0 => new player joined
   # - 1 => added cards
+  # - 2 => prompt
   def websocket_info({op, data}, state) do
-    {code, json} = case op do
-      :new_player ->
-        pid = data["pid"]
-        if pid do pid |> send({:new_player, %{"name" => state["name"]}}) end
-        {0, data["name"]}
-      x ->
-        {255, %{"op" => x, "data" => data}}
-    end
+    case op do
+      :tsar ->
+        broadcast(state["room"], :prompt, %{"prompt" => data["prompt"], "tsar" => state["name"]}, true)
+        {:ok, state}
+      _ ->
+        {code, json} = case op do
+          :new_player ->
+            pid = data["pid"]
+            if pid do pid |> send({:new_player, %{"name" => state["name"]}}) end
+            {0, data["name"]}
+          :prompt -> {2, data}
+          x -> {255, %{"op" => x, "data" => data}}
+        end
 
-    {:reply, {:text, JSON.encode!(%{"op" => code, "data" => json})}, state}
+        {:reply, {:text, JSON.encode!(%{"op" => code, "data" => json})}, state}
+    end
+  end
+
+  defp prompt(room, prompt) do
+    {pid, _} = Registry.Server |> Registry.lookup(room) |> Enum.random()
+    pid |> send({:tsar, %{"prompt" => prompt}})
   end
 
   defp add_card(cards, state) do
@@ -84,17 +103,15 @@ defmodule Server do
     }
   end
 
-  defp broadcast(room, opcode, data) do
+  defp broadcast(room, opcode, data, send_to_self \\ false) do
     each_client(room, fn pid ->
-      pid |> send({opcode, data})
+      if (pid != self() || send_to_self) do pid |> send({opcode, data}) end
     end)
   end
 
   defp each_client(room, f) do
     Registry.Server |> Registry.dispatch(room, fn entries ->
-      for {pid, _} <- entries do
-        if pid != self() do f.(pid) end
-      end
+      for {pid, _} <- entries do f.(pid) end
     end)
   end
 
