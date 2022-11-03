@@ -1,0 +1,13 @@
+[cards]
+prompts = [
+  "Quelle est ta couleur préférée ?",
+]
+
+answers = [
+  "Bleu",
+  "Rouge",
+  "Vert",
+  "Jaune",
+  "Orange",
+]
+
