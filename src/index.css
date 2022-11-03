@@ -37,6 +37,10 @@
   button:hover {
     @apply bg-blue-500;
   }
+
+  input {
+    @apply rounded-full text-gray-200 bg-gray-800 border-2 border-gray-500 px-4 focus:outline-none focus:text-gray-100 focus:border-blue-500 transition-colors;
+  }
 }
 
 body {
