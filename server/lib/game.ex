@@ -8,6 +8,7 @@
 # - 4 -> card played
 # - 5 -> card revealed
 # - 6 -> winner elected
+# - 10 -> heartbeat ack
 #
 # Server bound:
 # - 0 -> authorization
@@ -15,6 +16,7 @@
 # - 2 -> play card
 # - 3 -> reveal card
 # - 4 -> elect card
+# - 10 -> heartbeat
 defmodule Game do
   @behaviour GenServer
 
@@ -32,6 +34,7 @@ defmodule Game do
       "players" => [],
       "prompt" => nil,
       "room" => room,
+      "elected" => false,
     }}
   end
 
@@ -163,7 +166,8 @@ defmodule Game do
   def handle_cast({:elect, pid, card}, state) do
     # Was sender the tsar
     sender = state["players"] |> Enum.find(fn player -> player["pid"] == pid end)
-    if !sender["tsar"] do {:noreply, state} else
+    # Did the tsar already elect someone
+    if !sender["tsar"] || state["elected"] do {:noreply, state} else
       # Were all the cards revealed
       if state["players"] |> Enum.find(fn player -> !player["revealed"] && !player["tsar"] && !player["spectator"] end) do {:noreply, state} else
         # Find winner
@@ -173,7 +177,7 @@ defmodule Game do
             player["pid"] |> send({:packet, 6, winner["name"]})
           end)
           players = state["players"] |> Enum.map(fn player -> if player["name"] == winner["name"], do: player |> Map.put("score", player["score"] + 1), else: player end)
-          {:noreply, state |> Map.put("players", players)}
+          {:noreply, state |> Map.put("players", players) |> Map.put("elected", true)}
         end
       end
     end

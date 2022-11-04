@@ -50,15 +50,17 @@ defmodule Server do
 
     IO.inspect(payload)
 
-    case payload["op"] do
-      0 -> state |> Game.add_player(self(), payload["data"], true) # FIXME: UNSAFE: admin by default, that's no good!
-      1 -> state |> Game.prompt()
-      2 -> state |> Game.play(self(), payload["data"])
-      3 -> state |> Game.reveal(self(), payload["data"])
-      4 -> state |> Game.elect(self(), payload["data"])
-    end
+    if payload["op"] == 10 do {:reply, {:text, JSON.encode!(%{"op" => 10, "data" => 10})}, state} else
+      case payload["op"] do
+        0 -> state |> Game.add_player(self(), payload["data"], true) # FIXME: UNSAFE: admin by default, that's no good!
+        1 -> state |> Game.prompt()
+        2 -> state |> Game.play(self(), payload["data"])
+        3 -> state |> Game.reveal(self(), payload["data"])
+        4 -> state |> Game.elect(self(), payload["data"])
+      end
 
-    {:ok, state}
+      {:ok, state}
+    end
   end
 
   def websocket_info({:packet, op, data}, state) do

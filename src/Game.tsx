@@ -38,7 +38,10 @@ const Game: Component = () => {
     const connection = new WebSocket(endpoint + params.room)
     setConn(connection);
 
-    connection.onopen = () => console.log('Connected!')
+    connection.onopen = () => {
+      console.log('Connected!');
+      setInterval(() => connection.send(JSON.stringify({ op: 10 })), 20000);
+    }
 
     connection.onmessage = (e) => {
       const message = JSON.parse(e.data) as Message;
