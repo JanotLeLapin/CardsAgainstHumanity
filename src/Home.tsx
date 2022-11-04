@@ -10,7 +10,7 @@ const App: Component = () => {
         <div class="grid grid-cols-[repeat(3,1fr)] gap-8 mx-4">
           <A href={`/${roomName()}`}><button class="w-full">Créer</button></A>
           <button>Rejoindre</button>
-          <button>Code source</button>
+          <a href="https://github.com/JanotLeLapin/CardsAgainstHumanity" about="_blank"><button class="w-full">Code source</button></a>
         </div>
       </div>
     </div>
