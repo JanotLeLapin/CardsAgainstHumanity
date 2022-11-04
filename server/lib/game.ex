@@ -58,6 +58,8 @@ defmodule Game do
         "spectator" => true,
       } | state["players"]]
 
+      IO.inspect(players)
+
       # Send current player list to new player
       pid |> send({:packet, 0, players |> Enum.map(fn player -> %{
         "name" => player["name"],
@@ -97,10 +99,11 @@ defmodule Game do
 
   @impl true
   def handle_cast({:prompt}, state) do
-    prompt = "What is your favorite color?" # TODO: Random prompt
+    prompt = :config |> Server.Config.prompt
     next_tsar = state["players"] |> Enum.random()
     players = state["players"] |> Enum.map(fn player ->
-      new_cards = ["Baz", "Qux"] # TODO: Random cards
+      card_count = player["cards"] |> Enum.count
+      new_cards = if player["tsar"], do: [], else: :config |> Server.Config.answers(7 - card_count)
 
       # Send prompt packet to player
       player["pid"] |> send({:packet, 3, %{
@@ -130,7 +133,6 @@ defmodule Game do
       player["pid"] |> send({:packet, 4, sender["name"]})
       if player["pid"] == pid, do: player |> Map.put("selected", card), else: player
     end)
-    IO.inspect(players)
     {:noreply, state |> Map.put("players", players)}
   end
 

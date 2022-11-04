@@ -5,6 +5,8 @@ defmodule Server do
   def start(_type, _args) do
     IO.puts("Starting server")
 
+    {:ok, _} = Server.Config |> GenServer.start_link({}, name: :config)
+
     Supervisor.start_link(
       [
         Plug.Cowboy.child_spec(

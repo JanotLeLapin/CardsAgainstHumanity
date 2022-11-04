@@ -26,6 +26,7 @@ defmodule Server.MixProject do
       {:plug, "~>1.14"},
       {:plug_cowboy, "~>2.6"},
       {:json, "~>1.4.1"},
+      {:toml, "~>0.7"},
     ]
   end
 end
