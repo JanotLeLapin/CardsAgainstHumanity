@@ -61,8 +61,6 @@ defmodule Game do
         "spectator" => true,
       } | state["players"]]
 
-      IO.inspect(players)
-
       # Send current player list to new player
       pid |> send({:packet, 0, players |> Enum.map(fn player -> %{
         "name" => player["name"],
