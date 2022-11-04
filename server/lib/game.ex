@@ -116,8 +116,9 @@ defmodule Game do
       }})
 
       player
-        # Reset selected card and tsar property for the next round
+        # Reset properties for the next round
         |> Map.put("selected", nil)
+        |> Map.put("revealed", false)
         |> Map.put("tsar", player["pid"] == next_tsar["pid"])
         |> Map.put("cards", player["cards"] ++ new_cards)
         |> Map.put("spectator", false)
@@ -126,6 +127,7 @@ defmodule Game do
     {:noreply, state
       |> Map.put("players", players)
       |> Map.put("prompt", prompt)
+      |> Map.put("elected", false)
     }
   end
 
@@ -134,7 +136,7 @@ defmodule Game do
     sender = state["players"] |> Enum.find(fn player -> player["pid"] == pid end)
     players = state["players"] |> Enum.map(fn player ->
       player["pid"] |> send({:packet, 4, sender["name"]})
-      if player["pid"] == pid, do: player |> Map.put("selected", card), else: player
+      if player["pid"] == pid, do: player |> Map.put("selected", card) |> Map.put("cards", player["cards"] |> Enum.filter(fn c -> c != card end)), else: player
     end)
     {:noreply, state |> Map.put("players", players)}
   end
@@ -177,9 +179,16 @@ defmodule Game do
             player["pid"] |> send({:packet, 6, winner["name"]})
           end)
           players = state["players"] |> Enum.map(fn player -> if player["name"] == winner["name"], do: player |> Map.put("score", player["score"] + 1), else: player end)
+          self() |> Process.send_after(:prompt, 5000) # Run a new prompt in 5 seconds
           {:noreply, state |> Map.put("players", players) |> Map.put("elected", true)}
         end
       end
     end
+  end
+
+  @impl true
+  def handle_info(:prompt, state) do
+    self() |> prompt
+    {:noreply, state}
   end
 end
