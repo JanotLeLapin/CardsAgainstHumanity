@@ -14,7 +14,8 @@ defmodule Server do
           plug: Server.Router,
           dispatch: [
             {:_, [
-              {:_, Server, []},
+              {"/ws/[...]", Server, []},
+              {:_, Plug.Cowboy.Handler, {Server.Router, []}},
             ]},
           ],
           options: [port: 5000]
@@ -72,11 +73,16 @@ defmodule Server do
   defmodule Router do
     use Plug.Router
 
+    plug Plug.Static,
+      at: "/",
+      from: "../dist"
     plug :match
     plug :dispatch
 
+    get "/", do: conn |> put_resp_content_type("text/html") |> send_file(200, "../dist/index.html")
+
     match _ do
-      conn |> send_resp(200, "")
+      conn |> send_resp(404, "Not found!")
     end
   end
 end

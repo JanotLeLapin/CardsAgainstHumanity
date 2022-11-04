@@ -34,7 +34,7 @@ const Game: Component = () => {
   const elect = (card: string) => getConn()?.send(JSON.stringify({ op: 4, data: card }));
 
   onMount(() => {
-    const connection = new WebSocket(`ws://localhost:5000/${params.room}`)
+    const connection = new WebSocket(`ws://localhost:5000/ws/${params.room}`)
     setConn(connection);
 
     connection.onopen = () => console.log('Connected!')
