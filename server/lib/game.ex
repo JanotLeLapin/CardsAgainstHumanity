@@ -143,11 +143,18 @@ defmodule Game do
   @impl true
   def handle_cast({:play, pid, card}, state) do
     sender = state["players"] |> Enum.find(fn player -> player["pid"] == pid end)
-    players = state["players"] |> Enum.map(fn player ->
-      player["pid"] |> send({:packet, 4, sender["name"]})
-      if player["pid"] == pid, do: player |> Map.put("selected", card) |> Map.put("cards", player["cards"] |> Enum.filter(fn c -> c != card end)), else: player
-    end)
-    {:noreply, state |> Map.put("players", players)}
+    if sender["selected"] do {:noreply, state} else
+      players = state["players"] |> Enum.map(fn player ->
+        player["pid"] |> send({:packet, 4, sender["name"]})
+        if player["pid"] == pid do
+          cards = player["cards"] |> Enum.filter(fn c -> c != card end)
+          player
+            |> Map.put("selected", card)
+            |> Map.put("cards", cards)
+        else player end
+      end)
+      {:noreply, state |> Map.put("players", players)}
+    end
   end
 
   @impl true

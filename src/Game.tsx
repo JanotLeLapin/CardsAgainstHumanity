@@ -30,10 +30,11 @@ const Game: Component = () => {
 
   const [getPrompt, setPrompt] = createSignal<string | null>(null);
 
-  const login = () => getConn()?.send(JSON.stringify({ op: 0, data: getName() }))
-  const play = (card: string) => getConn()?.send(JSON.stringify({ op: 2, data: card }))
-  const reveal = (position: number) => getConn()?.send(JSON.stringify({ op: 3, data: position }))
-  const elect = (card: string) => getConn()?.send(JSON.stringify({ op: 4, data: card }));
+  const send = (op: number, data: any) => getConn()?.send(JSON.stringify({ op, data }));
+  const login = () => send(0, getName());
+  const play = (card: string) => send(2, card);
+  const reveal = (position: number) => send(3, position);
+  const elect = (card: string) => send(4, card);
 
   onMount(() => {
     const endpoint = 'ws://' + (window.location.origin.includes('://localhost:') ? 'localhost:5000' : window.location.origin.replace('http://', '')) + '/ws/';
