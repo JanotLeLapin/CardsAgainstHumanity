@@ -20,6 +20,7 @@ const Game: Component = () => {
 
   const [getName, setName] = createSignal<string>('Foo');
   const [isConnected, setConnected] = createSignal<boolean>(false);
+  const [isAdmin, setAdmin] = createSignal<boolean>(false);
   const [getConn, setConn] = createSignal<WebSocket | null>(null);
 
   const [getPlayers, setPlayers] = createSignal<Player[]>([]);
@@ -49,8 +50,10 @@ const Game: Component = () => {
       console.log(message)
       switch (message.op) {
         case 0:
-          setPlayers(message.data)
+          const { players, admin }: { players: Player[], admin: boolean } = message.data;
           setConnected(true);
+          setAdmin(admin);
+          setPlayers(players);
           break;
         case 1:
           const player: string = message.data;
@@ -109,6 +112,14 @@ const Game: Component = () => {
     }
   })
 
+  const Lobby: Component = () => {
+    return <div class="fixed bottom-4 right-4">
+      <Show when={isAdmin()} fallback={<h3>En attente du démarrage de la partie...</h3>}>
+        <button onClick={_ => getConn()?.send(JSON.stringify({ op: 1 }))}>Démarrer la partie</button>
+      </Show>
+    </div>
+  }
+
   return <div>
     <div class="fixed h-screen w-96 px-6 py-4 bg-gray-900 top-0 right-0">
       <For each={getPlayers()}>{player => <span class="flex justify-between"><p class="font-semibold">{player.name}</p> {player.score}</span>}</For>
@@ -125,7 +136,7 @@ const Game: Component = () => {
           </div>
         </div>
       }>
-        <Show when={getPrompt()} fallback={<button onClick={_ => getConn()?.send(JSON.stringify({ op: 1 }))} class="fixed bottom-4 right-4">Démarrer la partie</button>}>
+        <Show when={getPrompt()} fallback={<Lobby />}>
           <div class="m-8"><Card content={getPrompt() as string} /></div>
           <Show when={getPlayers().find(player => !player.played && !player.tsar)} fallback={
             <div class={grid}><For each={getSelections()}>{(selection, i) => <Card content={selection} onClick={() => getSelections().includes('') ? reveal(i()) : elect(selection)} />}</For></div>

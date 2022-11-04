@@ -52,7 +52,7 @@ defmodule Server do
 
     if payload["op"] == 10 do {:reply, {:text, JSON.encode!(%{"op" => 10, "data" => 10})}, state} else
       case payload["op"] do
-        0 -> state |> Game.add_player(self(), payload["data"], true) # FIXME: UNSAFE: admin by default, that's no good!
+        0 -> state |> Game.add_player(self(), payload["data"])
         1 -> state |> Game.prompt()
         2 -> state |> Game.play(self(), payload["data"])
         3 -> state |> Game.reveal(self(), payload["data"])
@@ -81,10 +81,6 @@ defmodule Server do
     plug :match
     plug :dispatch
 
-    get "/", do: conn |> put_resp_content_type("text/html") |> send_file(200, "../dist/index.html")
-
-    match _ do
-      conn |> send_resp(404, "Not found!")
-    end
+    match _, do: conn |> put_resp_content_type("text/html") |> send_file(200, "../dist/index.html")
   end
 end

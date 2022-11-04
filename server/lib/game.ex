@@ -20,7 +20,7 @@
 defmodule Game do
   @behaviour GenServer
 
-  def add_player(game, pid, name, admin \\ false), do: game |> GenServer.cast({:add, pid, name, admin})
+  def add_player(game, pid, name), do: game |> GenServer.cast({:add, pid, name})
   def remove_player(game, pid), do: game |> GenServer.cast({:remove, pid})
   def broadcast(game, fun), do: game |> GenServer.cast({:broadcast, fun})
   def prompt(game), do: game |> GenServer.cast({:prompt})
@@ -39,7 +39,9 @@ defmodule Game do
   end
 
   @impl true
-  def handle_cast({:add, pid, name, admin}, state) do
+  def handle_cast({:add, pid, name}, state) do
+    admin = state["players"] |> Enum.empty?
+
     # Make sure the given player is not already authenticated
     if state["players"] |> Enum.find(fn player -> player["pid"] == pid end) != nil do
       {:noreply, state}
@@ -62,13 +64,16 @@ defmodule Game do
       } | state["players"]]
 
       # Send current player list to new player
-      pid |> send({:packet, 0, players |> Enum.map(fn player -> %{
-        "name" => player["name"],
-        "score" => player["score"],
-        "spectator" => player["spectator"],
-        "played" => player["selected"] != nil,
-        "tsar" => player["tsar"],
-      } end)})
+      pid |> send({:packet, 0, %{
+        "players" => players |> Enum.map(fn player -> %{
+          "name" => player["name"],
+          "score" => player["score"],
+          "spectator" => player["spectator"],
+          "played" => player["selected"] != nil,
+          "tsar" => player["tsar"],
+        } end),
+        "admin" => admin,
+      }})
 
       {:noreply, state |> Map.put("players", players)}
     end
@@ -95,7 +100,13 @@ defmodule Game do
         false
       end
     end)
-    {:noreply, state |> Map.put("players", players)}
+
+    new_state = state |> Map.put("players", players)
+    # If every player left, kill genserver
+    case players |> Enum.count do
+      0 -> {:stop, :normal, new_state}
+      _ -> {:noreply, new_state}
+    end
   end
 
   @impl true
