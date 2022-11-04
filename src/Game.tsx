@@ -25,6 +25,7 @@ const Game: Component = () => {
   const [getPlayers, setPlayers] = createSignal<Player[]>([]);
   const [getCards, setCards] = createSignal<string[]>([]);
   const [getSelections, setSelections] = createSignal<string[]>([]);
+  const [getWinner, setWinner] = createSignal<string | null>(null);
 
   const [getPrompt, setPrompt] = createSignal<string | null>(null);
 
@@ -76,6 +77,7 @@ const Game: Component = () => {
             }
           }));
           setSelections([]);
+          setWinner(null);
           setPrompt(prompt);
           setCards([...new_cards, ...getCards()]);
           break;
@@ -89,7 +91,6 @@ const Game: Component = () => {
               played: player.played || player.name === name,
             };
           }));
-          console.log(getPlayers().find(player => !player.played && !player.tsar));
           break;
         case 5:
           const { card, pos }: { card: string, pos: number } = message.data;
@@ -103,6 +104,7 @@ const Game: Component = () => {
               score: player.name === winner ? player.score + 1 : player.score,
             };
           }));
+          setWinner(winner);
       }
     }
   })
@@ -133,6 +135,11 @@ const Game: Component = () => {
             </Show>
           </Show>
         </Show>
+      </Show>
+      <Show when={getWinner()}>
+        <div class="fixed w-full text-center bottom-2">
+          <h3>{getWinner()} remporte la partie !</h3>
+        </div>
       </Show>
     </div>
   </div>;
